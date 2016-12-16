@@ -1,0 +1,63 @@
+Timing analysis for C:\Users\User\Documents\50.002\checkoff2d\ladner_fischer_part2 at Fri Nov 04 02:27:36 SGT 2016
+
+==================================================================
+
+Worst-case tPDs for top-level combinational paths
+
+  tPD from b1 to z (3.291ns):
+
+    + 0.000ns = 0.000ns b1 [wb#30]
+    + 0.176ns = 0.176ns xadder.xb1 [xadder.xxb#30.xxor2]
+    + 0.176ns = 0.352ns xadder.p1 [xadder.xhi#30.xtrr.xxor2]
+    + 0.129ns = 0.481ns xadder.xfirstp.e [xadder.xfirstp.xone.xand2]
+    + 0.213ns = 0.694ns xadder.qg1 [xadder.xfirstp.xtwo.xor2]
+    + 0.129ns = 0.823ns xadder.xsecondb.e [xadder.xsecondb.xone.xand2]
+    + 0.249ns = 1.072ns xadder.rg3 [xadder.xsecondb.xtwo.xor2]
+    + 0.129ns = 1.201ns xadder.xthirdd.e [xadder.xthirdd.xone.xand2]
+    + 0.321ns = 1.522ns xadder.sg7 [xadder.xthirdd.xtwo.xor2]
+    + 0.129ns = 1.651ns xadder.xfourthh.e [xadder.xfourthh.xone.xand2]
+    + 0.465ns = 2.116ns xadder.tg15 [xadder.xfourthh.xtwo.xor2]
+    + 0.129ns = 2.245ns xadder.xfiftho.e [xadder.xfiftho.xone.xand2]
+    + 0.177ns = 2.422ns xadder.c30 [xadder.xfiftho.xtwo.xor2]
+    + 0.208ns = 2.630ns s31 [xadder.xsumpx.xxor2]
+    + 0.304ns = 2.933ns xadder.xzzz.w7 [xadder.xzzz.xor4a#0.xor4]
+    + 0.308ns = 3.241ns xadder.xzzz.x1 [xadder.xzzz.xor4b#0.xor4]
+    + 0.050ns = 3.291ns z [xadder.xzzz.xnor2.xnor2]
+
+  tPD from b1 to v (2.963ns):
+
+    + 0.000ns = 0.000ns b1 [wb#30]
+    + 0.176ns = 0.176ns xadder.xb1 [xadder.xxb#30.xxor2]
+    + 0.176ns = 0.352ns xadder.p1 [xadder.xhi#30.xtrr.xxor2]
+    + 0.129ns = 0.481ns xadder.xfirstp.e [xadder.xfirstp.xone.xand2]
+    + 0.213ns = 0.694ns xadder.qg1 [xadder.xfirstp.xtwo.xor2]
+    + 0.129ns = 0.823ns xadder.xsecondb.e [xadder.xsecondb.xone.xand2]
+    + 0.249ns = 1.072ns xadder.rg3 [xadder.xsecondb.xtwo.xor2]
+    + 0.129ns = 1.201ns xadder.xthirdd.e [xadder.xthirdd.xone.xand2]
+    + 0.321ns = 1.522ns xadder.sg7 [xadder.xthirdd.xtwo.xor2]
+    + 0.129ns = 1.651ns xadder.xfourthh.e [xadder.xfourthh.xone.xand2]
+    + 0.465ns = 2.116ns xadder.tg15 [xadder.xfourthh.xtwo.xor2]
+    + 0.129ns = 2.245ns xadder.xfiftho.e [xadder.xfiftho.xone.xand2]
+    + 0.177ns = 2.422ns xadder.c30 [xadder.xfiftho.xtwo.xor2]
+    + 0.208ns = 2.630ns s31 [xadder.xsumpx.xxor2]
+    + 0.025ns = 2.654ns xadder.xvvv.ss [xadder.xvvv.xinv2.xinverter]
+    + 0.159ns = 2.813ns xadder.xvvv.1 [xadder.xvvv.xand1.xand3]
+    + 0.150ns = 2.963ns v [xadder.xvvv.xor.xor2]
+
+  tPD from b1 to n (2.710ns):
+
+    + 0.000ns = 0.000ns b1 [wb#30]
+    + 0.176ns = 0.176ns xadder.xb1 [xadder.xxb#30.xxor2]
+    + 0.176ns = 0.352ns xadder.p1 [xadder.xhi#30.xtrr.xxor2]
+    + 0.129ns = 0.481ns xadder.xfirstp.e [xadder.xfirstp.xone.xand2]
+    + 0.213ns = 0.694ns xadder.qg1 [xadder.xfirstp.xtwo.xor2]
+    + 0.129ns = 0.823ns xadder.xsecondb.e [xadder.xsecondb.xone.xand2]
+    + 0.249ns = 1.072ns xadder.rg3 [xadder.xsecondb.xtwo.xor2]
+    + 0.129ns = 1.201ns xadder.xthirdd.e [xadder.xthirdd.xone.xand2]
+    + 0.321ns = 1.522ns xadder.sg7 [xadder.xthirdd.xtwo.xor2]
+    + 0.129ns = 1.651ns xadder.xfourthh.e [xadder.xfourthh.xone.xand2]
+    + 0.465ns = 2.116ns xadder.tg15 [xadder.xfourthh.xtwo.xor2]
+    + 0.129ns = 2.245ns xadder.xfiftho.e [xadder.xfiftho.xone.xand2]
+    + 0.177ns = 2.422ns xadder.c30 [xadder.xfiftho.xtwo.xor2]
+    + 0.208ns = 2.630ns s31 [xadder.xsumpx.xxor2]
+    + 0.080ns = 2.710ns n [xadder.xnnn.xbuffer]

@@ -1,0 +1,262 @@
+.include "C:/Users/User/Documents/50.002/50002/nominal.jsim"
+.include "C:/Users/User/Documents/50.002/50002/stdcell.jsim"
+//.include "../50002/2dcheckoff_3ns"
+//*.include "../50002/lab3adder.jsim"
+.include "C:/Users/User/Documents/50.002/checkoff2d/2dcheckoff_3ns.jsim"
+
+//Full adder without carryout (since PG block calculates that)
+//Tpd = 2*xor2tpd = 0.28
+.subckt FAsum a b cin s
+Xxor1 a b axorb xor2
+Xxor2 axorb cin s xor2
+.endsv
+
+//Full adder 
+//TpdS = 0.28; TpdCo = 3*nand2tpd + nad3tpd = 0.09 + 0.05 = 0.14
+.subckt FA a b cin s co
+Xsum a b cin s FAsum
+Xnand1 a b nab nand2
+Xnand2 a cin nac nand2
+Xnand3 b cin nbc nand2
+Xnand4 nab nbc nac co nand3
+.ends
+
+
+
+//Connecting circuit
+.subckt knex a b
+.connect a b
+.ends
+
+//32bit nor to calculate Z
+//Tpd = nor4tpd + and4tpd + and2tpd = 0.12 + 0.16 + 0.12 = 0.4
+.subckt nor32 in[31:0] out
+Xnor1 in[7:0] in[15:8] in[23:16] in[31:24] out1[7:0] nor4
+Xand1 out1[1:0] out1[3:2] out1[5:4] out1[7:6] out2[1:0] and4
+Xand2 out21 out20 out and2
+.ends
+
+//Circuit to calculate V
+//Tpd = invertertpd + nand3tpd+nand2tpd = 0.02+0.05+0.03 = 0.1
+.subckt vckt a31 b31 s31 v
+Xnot1 a31 na31 inverter
+Xnot2 b31 nb31 inverter
+Xnot3 s31 ns31 inverter
+Xnand1 a31 b31 ns31 abns nand3
+Xnand2 na31 nb31 s31 nanbs nand3
+Xnand3 abns nanbs v nand2
+.ends
+
+//Lowest level inverted PG block
+//Tpd = max(nand2tpd, nor2tpd) = max(0.03, 0.05) = 0.05
+.subckt invPGbase a b invP invG
+Xnand a b invG nand2
+Xnor a b invP nor2
+.ends
+
+//Carry part of PG block that takes inverted input and poduces non-inverted output
+//Used for first level carry computation and paralel circuit in carry-select
+//Tpd = and2tpd + nor2tpd = 0.12 + 0.05 = 0.17
+.subckt PGC invPij invGij invCi Cj1 Ci 
+Xcand1 invGij invCi cand1 and2
+Xcand2 invGij invPij cand2 and2
+Xcnor cand1 cand2 Cj1 nor2
+Xinv invCi Ci inverter
+.ends
+
+//Carry part of PG block that takes non-inverted input and produces inverted output
+//Used for parallel circuit in carry-select
+//Tpd = and2tpd + nor2tpd = 0.12 + 0.05 = 0.17
+.subckt invPGC Pij Gij Ci invCj1 invCi 
+Xcand Pij Ci cand and2
+Xcnor cand Gij invCj1 nor2
+Xinv Ci invCi inverter
+.ends
+
+//PG block that takes inverted input and produces non-inverted output
+//Tpd = and2tpd + nor2tpd = 0.12 + 0.05 = 0.17
+.subckt PG invPij invGij invPj1k invGj1k invCi Pik Gik Cj1 Ci
+//calculate Pik
+Xpnor invPij invPj1k Pik nor2
+//calculate Gj1k
+Xgand1 invGij invGj1k gand1 and2
+Xgand2 invGj1k invPj1k gand2 and2
+Xgnor gand1 gand2 Gik nor2
+//calculate Cj1
+Xcand1 invGij invCi cand1 and2
+Xcand2 invGij invPij cand2 and2
+Xcnor cand1 cand2 Cj1 nor2
+//calculate Ci
+Xinv invCi Ci inverter
+.ends
+
+//PG block that takes non-inverted input and produces inverted output
+//Tpd = and2tpd + nor2tpd = 0.12 + 0.05 = 0.17
+.subckt invPG Pij Gij Pj1k Gj1k Ci invPik invGik invCj1 invCi
+//calculate invPik
+Xpnand Pij Pj1k invPik nand2
+//Calculate invGik
+Xgand Pj1k Gij gand and2
+Xgnor gand Gj1k invGik nor2
+//Calculate invCj1
+Xcand Pij Ci cand and2
+Xcnor cand Gij invCj1 nor2
+//Calculate invCi
+Xinv Ci invCi inverter
+.ends
+
+//32-bit adder with carry-lookahead
+//Tpd of Z = xor2tpd + invPGbasetpd + PG/invPGtpd*4 + PGCtpd + PG/invPGtpd*4 + FAsumtpd + nor32tpd 
+//= 0.14 + 0.05 + 0.17*4 + 0.17 +0.17*4 + 0.28 + 0.4 
+// = 0.14 + 0.05 + 1.53 + 0.68 = 2.40
+.subckt CLAadder32 ALUFN[0] A[31:0] B[31:0] S[31:0] Z V N
+//XOR for subtraction
+Xxor B[31:0] ALUFN[0]#32 XB[31:0] xor2
+
+//PG tree
+Xpg1 A[31:0] XB[31:0] invP1[31:0] invG1[31:0] invPGbase
+Xpg2 invP1[30:0:2] invG1[30:0:2] invP1[31:1:2] invG1[31:1:2] invC3[30:0:2] P2[30:0:2] G2[30:0:2] C[31:1:2] C[30:0:2] PG
+Xpg3 P2[28:0:4] G2[28:0:4] P2[30:2:4] G2[30:2:4] C4[28:0:4] invP3[28:0:4] invG3[28:0:4] invC3[30:2:4] invC3[28:0:4] invPG
+Xpg4 invP3[24:0:8] invG3[24:0:8] invP3[28:4:8] invG3[28:4:8] invC5[24:0:8] P4[24:0:8] G4[24:0:8] C4[28:4:8] C4[24:0:8] PG
+Xpg5 P4[16:0:16] G4[16:0:16] P4[24:8:16] G4[24:8:16] C6[16:0:16] invP5[16:0:16] invG5[16:0:16] invC5[24:8:16] invC5[16:0:16] invPG 
+//c0 is ALUFN[0], but we want to feed in invc0
+Xcofinal invP50 invG50 invc0 C616 C60 PGC 
+Xnot ALUFN[0] invALUFN[0] inverter
+.connect invc0 invALUFN[0]
+
+//Adders
+Xadder A[31:0] XB[31:0] C[31:0] S[31:0] FAsum
+
+//Z is true when S is zero
+Xz S[31:0] Z nor32
+//V is true when a31 and xb31 are the same but s31 is different
+Xv A[31] XB[31] S[31] V vckt
+//N is true when S is negative (S31 =1)
+.connect S[31] N
+.ends
+
+//32-bit adder with carry-lookahead and carry-select
+//Tpd of Z = xor2tpd + invPGbasetpd + PG/invPGtpd*4 + PGCtpd + PG/invPGtpd*1  + mux2tpd + FAsumtpd + nor32tpd 
+//= 0.14 + 0.05 + 0.17*4 + 0.17 +0.17*1 + 0.12 + 0.28 + 0.4 
+// = 0.14 + 0.05 + 1.04 + 0.68 = 1.91
+.subckt CLACSadder32 ALUFN[0] A[31:0] B[31:0] S[31:0] Z V N
+//XOR for subtraction
+Xxor B[31:0] ALUFN[0]#32 XB[31:0] xor2
+
+//PG tree
+Xpg1 A[31:0] XB[31:0] invP1[31:0] invG1[31:0] invPGbase
+Xpg20 invP1[30:0:2] invG1[30:0:2] invP1[31:1:2] invG1[31:1:2] invC30[30:0:2] P2[30:0:2] G2[30:0:2] C20[31:1:2] C20[30:0:2] PG
+//Duplicated level 2 carry block for when carries into level 4 are 1
+Xpg21 invP1[30:0:2] invG1[30:0:2] invC31[30:0:2] C21[31:1:2] C21[30:0:2] PGC
+Xpg30 P2[28:0:4] G2[28:0:4] P2[30:2:4] G2[30:2:4] C40[28:0:4] invP3[28:0:4] invG3[28:0:4] invC30[30:2:4] invC30[28:0:4] invPG
+//Duplicated level 3 carry block for when carries into level 4 are 1
+Xpg31 P2[28:0:4] G2[28:0:4] C41[28:0:4] invC31[30:2:4] invC31[28:0:4] invPGC
+Xpg40 invP3[24:0:8] invG3[24:0:8] invP3[28:4:8] invG3[28:4:8] 0#4 P4[24:0:8] G4[24:0:8] C40[28:4:8] C40[24:0:8] PG
+//Duplicated level 4 carry block for when carries into level 4 are 1
+Xpg41 invP3[24:0:8] invG3[24:0:8] vdd#4 C41[28:4:8] C41[24:0:8] PGC
+Xpg5 P4[16:0:16] G4[16:0:16] P4[24:8:16] G4[24:8:16] C6[16:0:16] invP5[16:0:16] invG5[16:0:16] invC5[24:8:16] invC5[16:0:16] invPG 
+//c0 is ALUFN[0], but we want to feed in invc0
+Xcofinal invP50 invG50 invc0 C616 C60 PGC
+Xnot ALUFN[0] invALUFN[0] inverter
+.connect invc0 invALUFN[0]
+
+//Adders and muxO
+Xmux0 invC50#8 C20[7:0] C21[7:0] C[7:0] mux2
+Xmux1 invC58#8 C20[15:8] C21[15:8] C[15:8] mux2
+Xmux2 invC516#8 C20[23:16] C21[23:16] C[23:16] mux2
+Xmux3 invC524#8 C20[31:24] C21[31:24] C[31:24] mux2
+Xadder A[31:0] XB[31:0] C[31:0] S[31:0] FAsum
+
+//Z is true when S is zero
+Xz S[31:0] Z nor32
+//V is true when a31 and xb31 are the same but s31 is different
+Xv A[31] XB[31] S[31] V vckt
+//N is true when S is negative (S31 =1)
+.connect S[31] N
+.ends
+
+
+//32-bit adder with carry-select
+//Tpd of Z = 4*FAtpd + 7*mux2tpd + xor2tpd + nor32tpd 
+//= 4*0.14 + 0.12*7 +0.14 + 0.4 
+// = 1.94
+.subckt adder32 ALUFN[0] A[31:0] B[31:0] SUM[31:0] Z V N
+//XOR for subtraction
+Xxor B[31:0] ALUFN[0]#32 XB[31:0] xor2
+
+//Ripple chain with mux
+.connect C[0] ALUFN[0] 
+Xknex1 COF[2:0] C[3:1] knex
+Xadders1 A[3:0] XB[3:0] C[3:0] SUM[3:0] COF[3:0] FA
+
+.connect C0[4] 0
+.connect C1[4] vdd
+Xadders20 A[7:4] XB[7:4] C0[7:4] S0[7:4] CO0[7:4] FA
+Xadders21 A[7:4] XB[7:4] C1[7:4] S_1[7:4] CO1[7:4] FA
+Xknex20 C0[7:5] CO0[6:4] knex
+Xknex21 C1[7:5] CO1[6:4] knex
+Xmux2 COF[3] CO0[7] CO1[7] COF[7] mux2
+Xmux2sum COF[3]#4 S0[7:4] S_1[7:4] SUM[7:4] mux2
+
+.connect C0[8] 0
+.connect C1[8] vdd
+Xadders30 A[11:8] XB[11:8] C0[11:8] S0[11:8] CO0[11:8] FA
+Xadders31 A[11:8] XB[11:8] C1[11:8] S_1[11:8] CO1[11:8] FA
+Xknex30 C0[11:9] CO0[10:8] knex
+Xknex31 C1[11:9] CO1[10:8] knex
+Xmux3 COF[7] CO0[11] CO1[11] COF[11] mux2
+Xmux3sum COF[7]#4 S0[11:8] S_1[11:8] SUM[11:8] mux2
+
+.connect C0[12] 0
+.connect C1[12] vdd
+Xadders40 A[15:12] XB[15:12] C0[15:12] S0[15:12] CO0[15:12] FA
+Xadders41 A[15:12] XB[15:12] C1[15:12] S1[15:12] CO1[15:12] FA
+Xknex40 C0[15:13] CO0[14:12] knex
+Xknex41 C1[15:13] CO1[14:12] knex
+Xmux4 COF[11] CO0[15] CO1[15] COF[15] mux2 
+Xmux4sum COF[11]#4 S0[15:12] S1[15:12] SUM[15:12] mux2
+
+.connect C0[16] 0
+.connect C1[16] vdd
+Xadders50 A[19:16] XB[19:16] C0[19:16] S0[19:16] CO0[19:16] FA
+Xadders51 A[19:16] XB[19:16] C1[19:16] S1[19:16] CO1[19:16] FA
+Xknex50 C0[19:17] CO0[18:16] knex
+Xknex51 C1[19:17] CO1[18:16] knex
+Xmux5 COF[15] CO0[19] CO1[19] COF[19] mux2
+Xmux5sum COF[15]#4 S0[19:16] S1[19:16] SUM[19:16] mux2
+
+.connect C0[20] 0
+.connect C1[20] vdd
+Xadders60 A[23:20] XB[23:20] C0[23:20] S0[23:20] CO0[23:20] FA
+Xadders61 A[23:20] XB[23:20] C1[23:20] S1[23:20] CO1[23:20] FA
+Xknex60 C0[23:21] CO0[22:20] knex
+Xknex61 C1[23:21] CO1[22:20] knex
+Xmux6 COF[19] CO0[23] CO1[23] COF[23] mux2
+Xmux6sum COF[19]#4 S0[23:20] S1[23:20] SUM[23:20] mux2
+
+.connect C0[24] 0
+.connect C1[24] vdd
+Xadders70 A[27:24] XB[27:24] C0[27:24] S0[27:24] CO0[27:24] FA
+Xadders71 A[27:24] XB[27:24] C1[27:24] S1[27:24] CO1[27:24] FA
+Xknex70 C0[27:25] CO0[26:24] knex
+Xknex71 C1[27:25] CO1[26:24] knex
+Xmux7 COF[23] CO0[27] CO1[27] COF[27] mux2
+Xmux7sum COF[23]#4 S0[27:24] S1[27:24] SUM[27:24] mux2
+
+.connect C0[28] 0
+.connect C1[28] vdd
+Xadders80 A[31:28] XB[31:28] C0[31:28] S0[31:28] CO0[31:28] FA
+Xadders81 A[31:28] XB[31:28] C1[31:28] S1[31:28] CO1[31:28] FA
+Xknex80 C0[31:29] CO0[30:28] knex
+Xknex81 C1[31:29] CO1[30:28] knex
+Xmux8 COF[27] CO0[31] CO1[31] COF[31] mux2
+Xmux8sum COF[27]#4 S0[31:28] S1[31:28] SUM[31:28] mux2
+
+
+//Z is true when S is zero
+Xz SUM[31:0] Z nor32
+//V is true when a31 and xb31 are the same but s31 is different
+Xv A[31] XB[31] SUM[31] V vckt
+//N is true when S is negative (S31 =1)
+.connect SUM[31] N
+.ends

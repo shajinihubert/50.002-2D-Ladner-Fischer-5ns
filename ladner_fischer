@@ -1,0 +1,90 @@
+.include "C:/Users/User/Documents/50.002/50002/nominal.jsim"
+.include "C:/Users/User/Documents/50.002/50002/stdcell.jsim"
+.include "C:/Users/User/Documents/50.002/50002/lab3adder.jsim"
+*.include "C:/Users/User/Documents/50.002/checkoff2d/2dcheckoff_6ns.jsim"
+
+*.subckt adder32 op0 a[31:0] b[31:0] s[31:0] z v n
+
+.subckt adder32 ALUFN0 A[31:0] B[31:0] S[31:0] z v n 
+
+Xxb B[31:0] ALUFN0#32 XB[31:0] xor2
+*Xde S[31:0] constant0 //testing purposes
+Xvvv A31 XB31 S31 v vvv
+Xzzz S[31:0] z zzz
+Xnnn S31 n buffer
+
+.ends
+.subckt vvv a b s o
+Xinv a aa inverter
+Xinv1 b bb inverter
+Xinv2 s ss inverter 
+Xand1 a b ss 1 and3 
+Xand2 s aa bb 2 and3
+Xor 1 2 o or2
+.ends
+.subckt zzz S[31:0] z 
+Xor4a S[7:0] S[15:8] S[23:16] S[31:24] W[7:0] or4
+Xor4b W[1:0] W[3:2] W[5:4] W[7:6] X[1:0] or4
+Xnor2 X0 X1 z nor2
+.ends
+
+.subckt gray pg[1:0] b output
+Xre b pg1 e and2
+Xrq e pg0 c or2
+.ends
+
+.subckt black pg[0:1] b[1:0] output[1:0]
+Xdr pg1 b[1] output1 and2
+Xfd b[0] pg1 e and2
+Xfe e pg0 output0 or2
+.ends
+
+.subckt pgprep aval bval pvalue gvalue
+Xtrr aval bval pvalue xor2
+Xfrr aval bval gvalue and2
+.ends
+
+.subckt MAINONE 
+
+//propagation and generation prepared
+Xde A[31:0] B[31:0] p[31:0] g[31:0] pgprep
+
+//first row
+Xef p31 g31 p30 g30 qp31 qg31 black
+Xfr p29 g29 p28 g28 qp29 qg29 black
+Xsdf p27 g27 p26 g26 qp27 qg27 black
+Xsdg p25 g25 p24 g24 qp25 qg25 black
+Xsf p23 g23 p22 g22 qp23 qg23 black
+Xwre p21 g21 p20 g20 qp21 qg21 black
+Xcfa p19 g19 p18 g18 qp19 qg19 black
+Xge p17 g17 p16 g16 qp17 qg17 black
+Xhth p15 g15 p14 g14 qp15 qg15 black
+Xjgf p13 g13 p12 g12 qp13 qg13 black
+Xdfh p11 g11 p10 g10 qp11 qg11 black
+Xyuky p9 g9 p8 g8 qp9 qg9 black
+Xjij p7 g7 p6 g6 qp7 qg7 black
+Xjn p5 g5 p4 g4 qp5 qg5 black
+Xih p3 g3 p2 g2 qp3 qg3 black
+Xethe p1 g1 cin0 cin1 qp1 qg1 gray
+
+//second row
+Xuywe 
+Xoin
+Xiuhj
+Xoios
+Xuhui
+Xhbil
+Xiuiy
+Xkmop
+Xuyh
+Xiyik
+Xkuhk
+Xkoy
+Xkuyl
+Xytfu 
+Xokpo
+Xhgisf
+
+.ends
+
+

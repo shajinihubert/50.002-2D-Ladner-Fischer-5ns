@@ -1,0 +1,198 @@
+.include "C:/Users/User/Documents/50.002/50002/nominal.jsim"
+.include "C:/Users/User/Documents/50.002/50002/stdcell.jsim"
+.include "C:/Users/User/Documents/50.002/checkoff2d/2dcheckoff_3ns.jsim"
+
+.subckt pgprep aval bval gvalue pvalue
+Xtrr aval bval pvalue xor2
+Xfrr aval bval gvalue and2
+.ends
+
+.subckt xorgate a b c
+Xinvone a anot inverter
+Xinvtwo b bnot inverter
+Xnanda anot b bnand nand2
+Xnandb bnot a anand nand2
+Xnandall bnand anand c nand2
+.ends 
+
+.subckt norball ga pa gb pb paint qg qp
+Xref paint notpa inverter
+Xdef pb notpa qp nor2 //notpb
+Xokf pa gb ga notqg aoi21
+Xdre notqg qg inverter
+.ends
+
+.subckt nandball ga pa gb pb qg qp
+Xdef pa pb qp nand2 //notqp
+Xokf pa gb ga notqg aoi21
+Xdre notqg qg inverter
+.ends
+
+.subckt nortonandball ga paold gb pb panew qg qp
+Xref panew notpa inverter
+Xdef paold notpa notqp nor2 //what nor balls do
+Xdak panew pb qp nand2 // what nand balls do
+Xokf panew gb ga notqg aoi21
+Xdre notqg qg inverter
+.ends
+
+.subckt ball ga pa gb pb qg qp
+Xthr pa pb qp and2
+//Xdko pa pb notqp nand2
+//Xdfg pa notpa inverter
+//Xfgg notqp notpa qp nor2
+Xokf pa gb ga notqg aoi21
+Xdre notqg qg inverter
+.ends
+
+.subckt knex a b 
+.connect a b 
+.ends
+
+.subckt adder32 op0 A[31:0] B[31:0] S[31:0] z v n
+Xxb B[31:0] op0#32 XB[31:0] xor2
+.connect cin op0
+Xvsd A31 XB31 S31 v vvalue
+Xzsd S[31:0] z zvalue
+Xnnn S31 n knex
+
+//propagation and generation prepared
+Xhi A[31:0] XB[31:0] g[31:0] p[31:0] pgprep 
+Xhei p0 cin h0 and2
+Xdei g0 h0 gold0 or2
+
+//first row
+XfirstA g31 p31 g30 p30 qg31 qp31 ball
+XfirstB g29 p29 g28 p28 qg29 qp29 ball
+XfirstC g27 p27 g26 p26 qg27 qp27 ball
+XfirstD g25 p25 g24 p24 qg25 qp25 ball
+XfirstE g23 p23 g22 p22 qg23 qp23 ball
+XfirstF g21 p21 g20 p20 qg21 qp21 ball
+XfirstG g19 p19 g18 p18 qg19 qp19 ball
+XfirstH g17 p17 g16 p16 qg17 qp17 ball
+XfirstI g15 p15 g14 p14 qg15 qp15 ball
+XfirstJ g13 p13 g12 p12 qg13 qp13 ball
+XfirstK g11 p11 g10 p10 qg11 qp11 ball
+XfirstL g9 p9 g8 p8 qg9 qp9 ball
+XfirstM g7 p7 g6 p6 qg7 qp7 ball
+XfirstN g5 p5 g4 p4 qg5 qp5 ball
+XfirstO g3 p3 g2 p2 qg3 qp3 ball
+XfirstP g1 p1 gold0 p0 qg1 qp1 ball
+.connect qg1 c1 
+
+//second row 
+XsecondA g2 p2 qg1 qp1 c2 rp2 ball
+XsecondB qg3 qp3 qg1 qp1 rg3 rp3 ball
+.connect rg3 c3
+XsecondC g6 p6 qg5 qp5 rg6 rp6 ball
+XsecondD qg7 qp7 qg5 qp5 rg7 rp7 ball
+XsecondE g10 p10 qg9 qp9 rg10 rp10 ball
+XsecondF qg11 qp11 qg9 qp9 rg11 rp11 ball
+XsecondG g14 p14 qg13 qp13 rg14 rp14 ball
+XsecondH qg15 qp15 qg13 qp13 rg15 rp15 ball
+XsecondI g18 p18 qg17 qp17 rg18 rp18 ball
+XsecondJ qg19 qp19 qg17 qp17 rg19 rp19 ball
+XsecondK g22 p22 qg21 qp21 rg22 rp22 ball
+XsecondL qg23 qp23 qg21 qp21 rg23 rp23 ball
+XsecondM g26 p26 qg25 qp25 rg26 rp26 ball
+XsecondN qg27 qp27 qg25 qp25 rg27 rp27 ball
+XsecondO g30 p30 qg29 qp29 rg30 rp30 ball
+XsecondP qg31 qp31 qg29 qp29 rg31 rp31 ball
+
+//third row 
+XthirdA g4 p4 rg3 rp3 c4 sp4 ball
+XthirdB qg5 qp5 rg3 rp3 c5 sp5 ball
+XthirdC rg6 rp6 rg3 rp3 c6 sp6 ball
+XthirdD rg7 rp7 rg3 rp3 sg7 sp7 nandball
+//XthirdD rg7 rp7 rg3 rp3 sgub7 spub7 ball
+//Xthirdbuff sgub7 sg7 buffer
+//Xthirdpbu spub7 sp7 buffer
+//.connect sgub7 c7
+.connect sg7 c7
+XthirdE g12 p12 rg11 rp11 sg12 sp12 ball
+XthirdF qg13 qp13 rg11 rp11 sg13 sp13 ball
+XthirdG rg14 rp14 rg11 rp11 sg14 sp14 ball
+XthirdH rg15 rp15 rg11 rp11 sg15 sp15 ball
+XthirdI g20 p20 rg19 rp19 sg20 sp20 ball
+XthirdJ qg21 qp21 rg19 rp19 sg21 sp21 ball
+XthirdK rg22 rp22 rg19 rp19 sg22 sp22 ball
+XthirdL rg23 rp23 rg19 rp19 sg23 sp23 nandball
+//XthirdL rg23 rp23 rg19 rp19 sgub23 spub23 ball
+//Xthird23 sgub23 sg23 buffer
+//Xfird23 spub23 sp23 buffer
+XthirdM g28 p28 rg27 rp27 sg28 sp28 ball
+XthirdN qg29 qp29 rg27 rp27 sg29 sp29 ball
+XthirdO rg30 rp30 rg27 rp27 sg30 sp30 ball
+XthirdP rg31 rp31 rg27 rp27 sg31 sp31 ball
+
+//fourth row
+XfourthA g8 p8 sg7 sp7 c8 tp8 norball
+XfourthB qg9 qp9 sg7 sp7 c9 tp9 norball
+XfourthC rg10 rp10 sg7 sp7 c10 tp10 norball
+XfourthD rg11 rp11 sg7 sp7 c11 tp11 norball
+XfourthE sg12 sp12 sg7 sp7 c12 tp12 norball
+XfourthF sg13 sp13 sg7 sp7 c13 tp13 norball
+XfourthG sg14 sp14 sg7 sp7 c14 tp14 norball
+XfourthH sg15 sp15 sg7 sp7 tg15 tp15 nortonandball
+//XfourthH sg15 sp15 sg7 sp7 tgub15 tpub15 ball
+//Xbuffer15 tgub15 tg15 buffer
+//Xbuffff tpub15 tp15 buffer
+//.connect tgub15 c15
+.connect tg15 c15
+XfourthI g24 p24 sg23 sp23 tg24 tp24 norball
+XfourthJ qg25 qp25 sg23 sp23 tg25 tp25 norball
+XfourthK rg26 rp26 sg23 sp23 tg26 tp26 norball
+XfourthL rg27 rp27 sg23 sp23 tg27 tp27 norball
+XfourthM sg28 sp28 sg23 sp23 tg28 tp28 norball
+XfourthN sg29 sp29 sg23 sp23 tg29 tp29 norball
+XfourthO sg30 sp30 sg23 sp23 tg30 tp30 norball
+XfourthP sg31 sp31 sg23 sp23 tg31 tp31 norball
+
+//fifth row
+XfifthA g16 p16 tg15 tp15 c16 u16 norball
+XfifthB qg17 qp17 tg15 tp15 c17 u17 norball
+XfifthC rg18 rp18 tg15 tp15 c18 u18 norball
+XfifthD rg19 rp19 tg15 tp15 c19 u19 norball
+XfifthE sg20 sp20 tg15 tp15 c20 u20 norball
+XfifthF sg21 sp21 tg15 tp15 c21 u21 norball
+XfifthG sg22 sp22 tg15 tp15 c22 u22 norball
+XfifthH sg23 sp23 tg15 tp15 c23 u23 norball
+XfifthI tg[31:24] tp[31:24] tg15#8 tp15#8 c[31:24] u[31:24] norball
+
+//summations
+XsumA p0 cin s0 xor2
+XsumB p1 gold0 s1 xor2
+XsumC p[31:2] c[30:1] s[31:2] xor2
+.ends
+
+.subckt vvalue a b s o
+Xinv a aa inverter
+Xinv1 b bb inverter
+Xinv2 s ss inverter 
+Xand1 a b ss 1 and3 
+Xand2 s aa bb 2 and3
+Xor 1 2 o or2
+.ends
+
+.subckt zvalue S[31:0] z
+Xdef S[15:0] S[31:16] T[15:0] nor2
+Xfer T[7:0] T[15:8] U[7:0] nand2
+Xdes U[3:0] U[7:4] V[3:0] nor2
+Xfge V[1:0] V[3:2] W[1:0] nand2
+Xdfr W1 W0 z nor2
+.ends
+
+.subckt zvaluu S[31:0] z 
+Xor4a S[7:0] S[15:8] S[23:16] S[31:24] W[7:0] nor4
+Xor4b W[1:0] W[3:2] W[5:4] W[7:6] X[1:0] nand4
+Xnor2 X0 X1 z nor2
+.ends
+
+//.subckt zvalu S[31:0] z 
+//Xor4a S[7:0] S[15:8] S[23:16] S[31:24] W[7:0] nor4
+//Xor4b W[1:0] W[3:2] W[5:4] W[7:6] X[1:0] and4
+//Xnor2 X0 X1 z and2
+//.ends
+
+.plot L(xtestadder.xs[31:0])
+.plot L(xtestadder.xadder.s0)

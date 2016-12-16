@@ -1,0 +1,78 @@
+.include "C:/Users/User/Documents/50.002/50002/nominal.jsim"
+.include "C:/Users/User/Documents/50.002/50002/stdcell.jsim"
+*.include "C:/Users/User/Documents/50.002/50002/lab3adder.jsim"
+.include "C:/Users/User/Documents/50.002/checkoff2d/2dcheckoff_6ns.jsim"
+
+.subckt adder32 op0 a[31:0] b[31:0] s[31:0] z v n
+
+*.subckt adder32 ALUFN0 A[31:0] B[31:0] S[31:0] z v n 
+
+*Xxb B[31:0] ALUFN0#32 XB[31:0] xor2
+Xxb B[31:0] op0#32 XB[31:0] xor2
+Xtest0 A0 XB0 op0 S0 C0 FA
+Xtest1 A[7:1] XB[7:1] C[6:0] S[7:1] C[7:1] FA
+Xtest2 C7 A[15:8] XB[15:8] C15 S[15:8] block
+Xtest3 C15 A[23:16] XB[23:16] C23 S[23:16] block
+Xtest4 C23 A[31:24] XB[31:24] C31 S[31:24] block
+
+Xvvv A31 XB31 S31 v vvv
+Xzzz S[31:0] z zzz
+Xnnn S31 n buffer
+
+.ends
+
+//simple FA circuit implementation
+.subckt FA a b c s co
+Xxora a b 1 xor2
+Xxorb 1 c s xor2
+Xnanda a b 2 nand2
+Xnandb a c 3 nand2
+Xnandc b c 4 nand2
+Xnand 2 3 4 co nand3
+.ends
+
+.subckt vvv a b s o
+Xinv a aa inverter
+Xinv1 b bb inverter
+Xinv2 s ss inverter 
+Xand1 a b ss 1 and3 
+Xand2 s aa bb 2 and3
+Xor 1 2 o or2
+.ends
+
+.subckt zzz S[31:0] z 
+Xor4a S[7:0] S[15:8] S[23:16] S[31:24] W[7:0] or4
+Xor4b W[1:0] W[3:2] W[5:4] W[7:6] X[1:0] or4
+Xnor2 X0 X1 z nor2
+.ends
+
+//first 2 FA in each 4bit block; assuming cin = 0
+.subckt FAzero a b ax bx s sx cx
+Xadd1a a b 0 s co FA
+Xadd1b ax bx co sx cx FA
+.ends
+
+//first 2 FA in each 4bit block; assuming cin = 1
+.subckt FAone a b ax bx s sx cx
+Xhehe cin constant1
+Xadd1a a b cin s co FA
+Xadd1b ax bx co sx cx FA
+.ends
+
+//8-bit block of carry select adder implementation
+.subckt block cin rangeA[7:0] rangeB[7:0] cmidout sumout[7:0]
+Xfafirst rangeA0 rangeB0 rangeA1 rangeB1 Szero0 Szero1 Czero1 FAzero
+Xfafirstrest rangeA[7:2] rangeB[7:2] Czero[6:1] Szero[7:2] Czero[7:2] FA
+Xfasecond rangeA0 rangeB0 rangeA1 rangeB1 Sone0 Sone1 Cone1 FAone
+Xfasecondrest rangeA[7:2] rangeB[7:2] Cone[6:1] Sone[7:2] Cone[7:2] FA
+Xsummux cin#8 Szero[7:0] Sone[7:0] sumout[7:0] mux2
+Xcarrymux cin Czero7 Cone7 cmidout mux2
+.ends
+
+*Xfafirst A8 XB8 A9 XB9 Szero8 Szero9 Czero9 FAzero
+*Xfafirstrest A[15:10] XB[15:10] Czero[14:9] S[15:10] Czero[15:9] FA
+*Xfasecond A8 XB8 A9 XB9 Sone8 Sone9 Cone9 FAone
+*Xfasecondrest A[15:10] XB[15:10] Cone[14:9] S[15:10] Cone[15:9] FA
+*Xsummux cin#8 Szero[15:8] Sone[15:8] S[15:8] mux2
+*Xcarrymux cin Czero15 Cone15 C15 mux2
+*.ends 
